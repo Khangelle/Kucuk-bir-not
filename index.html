@@ -1,1 +1,665 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sana Özel Bir Not...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Cinzel+Decorative:wght@700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-pink: #ffb6c1;
+      --card-pink: #fff0f5;
+      --accent-pink: #ff1493;
+      --dark-pink: #8b008b;
+      --text-color: #2c2c2c;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-pink);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'VT323', monospace;
+      padding: 15px;
+      overflow-x: hidden;
+      transition: background-color 1s ease;
+    }
+
+    /* ÇİFT ARKA PLAN YAPISI */
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+      z-index: 1;
+      transition: opacity 1.2s ease;
+    }
+
+    #bg-day {
+      background-image: url('arkaplan.jpg');
+      opacity: 1;
+    }
+
+    #bg-night {
+      background-image: url('https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=1000&auto=format&fit=crop');
+      opacity: 0;
+    }
+
+    body.dark-mode #bg-day { opacity: 0; }
+    body.dark-mode #bg-night { opacity: 1; filter: brightness(0.7) contrast(1.1); }
+
+    /* DOLUNAY & SİS EFEKTİ */
+    .full-moon {
+      position: fixed;
+      top: 35px;
+      right: 35px;
+      width: 90px;
+      height: 90px;
+      background: radial-gradient(circle, #fffed6 60%, #e2d9a3 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 35px #fffed6, 0 0 70px rgba(255, 254, 214, 0.5);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 1.5s ease;
+      z-index: 2;
+    }
+
+    .werewolf-silhouette {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 45vh;
+      background: radial-gradient(ellipse at bottom, rgba(5, 8, 18, 0.9) 10%, transparent 85%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.5s ease;
+      z-index: 2;
+    }
+
+    body.dark-mode .full-moon { opacity: 0.95; transform: translateY(0); }
+    body.dark-mode .werewolf-silhouette { opacity: 1; }
+
+    .container {
+      position: relative;
+      z-index: 3;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+
+    /* MÜHÜRLÜ ZARF (INTRO) */
+    .envelope-wrapper {
+      background: rgba(255, 255, 255, 0.9);
+      border: 4px solid var(--accent-pink);
+      border-radius: 16px;
+      padding: 30px 20px;
+      box-shadow: 6px 6px 0px var(--dark-pink);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .envelope-wrapper:hover {
+      transform: scale(1.02);
+    }
+
+    .seal-btn {
+      width: 70px;
+      height: 70px;
+      background: #b22222;
+      border: 3px solid #ffd700;
+      border-radius: 50%;
+      margin: 20px auto 10px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #ffd700;
+      font-size: 1.8rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    /* AUDIO CONTROLLER */
+    .audio-control {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.85);
+      border: 2px solid var(--accent-pink);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      box-shadow: 2px 2px 0px var(--dark-pink);
+    }
+
+    body.dark-mode .audio-control {
+      background: #2b1810;
+      border-color: #8c5a2b;
+      color: #f4e4bc;
+      box-shadow: 2px 2px 0px #000;
+    }
+
+    /* EKRAN YÖNETİMİ */
+    .screen {
+      display: none;
+      animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .screen.active { display: block; }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* KUTULAR & RETRO BİLEŞENLER */
+    .retro-box {
+      background: rgba(255, 255, 255, 0.95);
+      border: 4px solid var(--accent-pink);
+      border-radius: 16px;
+      padding: 25px 20px;
+      box-shadow: 6px 6px 0px var(--dark-pink);
+    }
+
+    h2 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1.1rem;
+      color: var(--accent-pink);
+      margin-bottom: 15px;
+      line-height: 1.4;
+      text-shadow: 2px 2px 0px #ffb6c1;
+    }
+
+    h3 {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.85rem;
+      color: var(--accent-pink);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    p { font-size: 1.35rem; color: #4a4a4a; line-height: 1.2; }
+
+    /* TIMELINE & HARİTA SAYFASI */
+    .map-box {
+      background: #fdf6e3;
+      border: 4px double #8c5a2b;
+      border-radius: 12px;
+      padding: 20px 15px;
+      box-shadow: 4px 4px 0px #5c3a21;
+      color: #3d2314;
+    }
+
+    .counter-badge {
+      background: #8c5a2b;
+      color: #fdf6e3;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.75rem;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 15px 0;
+      line-height: 1.5;
+    }
+
+    .timeline {
+      text-align: left;
+      margin: 15px 0;
+      padding-left: 10px;
+      border-left: 2px dashed #8c5a2b;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 15px;
+      padding-left: 15px;
+    }
+
+    .timeline-item::before {
+      content: '🐾';
+      position: absolute;
+      left: -12px;
+      top: 0;
+      font-size: 0.9rem;
+    }
+
+    .timeline-date {
+      font-weight: bold;
+      color: #8c5a2b;
+      font-size: 1.1rem;
+    }
+
+    /* PARŞÖMEN SAYFASI */
+    .parchment-box {
+      background: #f4e4bc;
+      background-image: radial-gradient(#e2c993 1px, transparent 0);
+      background-size: 15px 15px;
+      border: 6px double #5c3a21;
+      border-radius: 8px;
+      padding: 25px 18px;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), inset 0 0 30px rgba(92, 58, 33, 0.5);
+      color: #2b1810;
+      max-height: 75vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mischief-header {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 0.95rem;
+      color: #5c3a21;
+      margin-bottom: 15px;
+      border-bottom: 2px dashed #8c5a2b;
+      padding-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .mischief-sub {
+      font-size: 0.75rem;
+      font-family: 'VT323', monospace;
+      color: #8c5a2b;
+      margin-top: 4px;
+    }
+
+    .magic-lines {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.55rem;
+      line-height: 1.5;
+      color: #3d2314;
+      text-align: left;
+      overflow-y: auto;
+      flex-grow: 1;
+    }
+
+    .signature-area {
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px dashed #8c5a2b;
+      text-align: right;
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #5c3a21;
+      opacity: 0;
+      transition: opacity 1.5s ease;
+    }
+
+    .signature-area.visible { opacity: 1; }
+
+    .signature-sub {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 0.75rem;
+      color: #8c5a2b;
+      display: block;
+    }
+
+    /* BUTONLAR & NOTLAR */
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-shrink: 0; }
+
+    .btn-retro {
+      font-family: 'Press Start 2P', cursive;
+      background-color: #ff69b4;
+      color: #fff;
+      border: 3px solid #fff;
+      padding: 12px 15px;
+      font-size: 0.7rem;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 0px var(--dark-pink);
+      width: 100%;
+    }
+
+    .btn-retro.btn-secondary {
+      background-color: #fff;
+      color: var(--accent-pink);
+      border-color: var(--accent-pink);
+      box-shadow: 0 4px 0px var(--accent-pink);
+    }
+
+    .btn-magic {
+      background-color: #5c3a21;
+      color: #f4e4bc;
+      border-color: #8c5a2b;
+      box-shadow: 0 4px 0px #2b1810;
+    }
+
+    .btn-retro:active { transform: translateY(3px); }
+
+    .note-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
+
+    .secret-note {
+      background-color: var(--card-pink);
+      border: 3px dashed var(--accent-pink);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .secret-note.closed { text-align: center; }
+    .secret-note.closed::after {
+      content: '✉️ TIKLA VE OKU';
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.65rem;
+      color: var(--accent-pink);
+      display: block;
+      margin-top: 4px;
+    }
+
+    .secret-note.open { background-color: #ffffff; border-style: solid; }
+    .secret-note .content { display: none; font-size: 1.3rem; }
+    .secret-note.open .content { display: block; }
+
+    .gif-container {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 15px auto;
+      border: 3px solid var(--accent-pink);
+      border-radius: 50%;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 3px 3px 0px var(--dark-pink);
+    }
+
+    .gif-container img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+
+  <div id="bg-day" class="bg-pattern"></div>
+  <div id="bg-night" class="bg-pattern"></div>
+
+  <div class="full-moon"></div>
+  <div class="werewolf-silhouette"></div>
+
+  <div class="audio-control" onclick="toggleAudio()">🎵</div>
+
+  <!-- SES DOSYALARI -->
+  <audio id="bgMusicLight" loop>
+    <source src="aydinlik.mp3" type="audio/mp3">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-game-level-music-689.mp3" type="audio/mp3">
+  </audio>
+  <audio id="bgMusicDark" loop>
+    <source src="karanlik.mp3" type="audio/mp3">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-mysterious-prowler-277.mp3" type="audio/mp3">
+  </audio>
+
+  <div class="container">
+    
+    <!-- 0. EKRAN: MÜHÜRLÜ ZARF INTRO -->
+    <div id="screen0" class="screen active">
+      <div class="envelope-wrapper" onclick="openEnvelope()">
+        <p style="font-family: 'Press Start 2P', cursive; font-size: 0.8rem; color: var(--accent-pink);">SANA BİR MEKTUP VAR ✉️</p>
+        <div class="seal-btn">✉</div>
+        <p style="font-size: 1.1rem; color: #666; margin-top: 10px;">[ Mührü kırmak ve açmak için tıkla ]</p>
+      </div>
+    </div>
+
+    <!-- 1. EKRAN: GİRİŞ -->
+    <div id="screen1" class="screen">
+      <div class="retro-box">
+        <div class="gif-container">
+          <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMnB2NXBrZ2V4NW4yZXBzNmkyYnlvaGpwZjJkZnNsdjh3ZHF3eWRndCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Vp3cd522ptR1y/giphy.gif" alt="Tatlı Kedi">
+        </div>
+        <h2>SELAM! 👋</h2>
+        <p>Sana özel küçük ve nostaljik bir not defteri bıraktım...</p>
+        <button class="btn-retro" style="margin-top: 20px;" onclick="nextScreen(2)">[ NOTLARA GÖZ AT ✨ ]</button>
+      </div>
+    </div>
+
+    <!-- 2. EKRAN: GİZLİ NOTLAR -->
+    <div id="screen2" class="screen">
+      <div class="retro-box">
+        <h3>SANA BİRKAÇ NOTUM VAR 📝</h3>
+        <p style="font-size: 1.1rem; color: #888; margin-bottom: 10px;">(Okumak için kutulara tıkla)</p>
+        
+        <div class="note-grid">
+          <div class="secret-note closed" onclick="openNote(this)">
+            <div class="content">
+              🐾 <b>Hatırlatma #1:</b><br>Geçenlerde aklıma geldin, umarım her şey yolundadır ve çok iyisindir!
+            </div>
+          </div>
+
+          <div class="secret-note closed" onclick="openNote(this)">
+            <div class="content">
+              ☕ <b>Hatırlatma #2:</b><br>Eski kahve sohbetlerimizi ve birlikte güldüğümüz anları hep tatlı bir tebessümle hatırlıyorum.
+            </div>
+          </div>
+
+          <div class="secret-note closed" onclick="openNote(this)">
+            <div class="content">
+              🌸 <b>Günün Dileği:</b><br>Yüzünden gülücük hiç eksik olmasın, kendine çok çok iyi bak!
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-retro btn-secondary" onclick="nextScreen(1)">← GERİ</button>
+          <button class="btn-retro" onclick="nextScreen(25)">ADIM İZLERİ 🐾</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.5 EKRAN: ZAMAN VE ADIM İZLERİ -->
+    <div id="screen25" class="screen">
+      <div class="map-box">
+        <h3 style="color: #5c3a21; border-bottom: 1px dashed #8c5a2b; padding-bottom: 8px;">KESİŞEN YOLLAR 🗺️</h3>
+        
+        <div id="dayCounter" class="counter-badge">
+          Hesaplanıyor...
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-date">11 Eylül 2023</div>
+            <p style="font-size: 1.1rem;">Aynı okul sıralarında ilk kez aynı yere denk geldiğimiz o gün...</p>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-date">2025 — 2026</div>
+            <p style="font-size: 1.1rem;">Zaman geçti ve seni gerçekten, daha yakından tanıma fırsatı bulduğum dönem başladı.</p>
+          </div>
+        </div>
+
+        <p style="font-size: 1.1rem; font-style: italic; color: #5c3a21; margin-top: 10px;">"Bazen yollar bir anlığına kesişir, zamanı gelince de hikaye derinleşir..."</p>
+
+        <div class="btn-group" style="margin-top: 15px;">
+          <button class="btn-retro btn-magic" onclick="nextScreen(2)">← NOTLAR</button>
+          <button class="btn-retro btn-magic" onclick="nextScreen(3)">BÜYÜLÜ PARŞÖMEN ✨</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. EKRAN: BÜYÜLÜ PARŞÖMEN -->
+    <div id="screen3" class="screen">
+      <div class="parchment-box">
+        <div class="mischief-header">
+          ✨ <i>"I solemnly swear that I am up to no good"</i> ✨
+          <div class="mischief-sub">(Ciddiyetle yemin ederim ki muziplik peşindeyim)</div>
+        </div>
+        
+        <div class="magic-lines" id="magicContainer"></div>
+
+        <div id="signature" class="signature-area">
+          "Mischief Managed" 🪄
+          <span class="signature-sub">— Kayra</span>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-retro btn-magic" onclick="nextScreen(25)">← HARİTA</button>
+          <button class="btn-retro btn-magic" onclick="nextScreen(4)">SON SAYFA 🪄</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. EKRAN: KAPANIS -->
+    <div id="screen4" class="screen">
+      <div class="retro-box">
+        <div class="gif-container">
+          <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3JqNHY3MG5kYXZrbms5aXp3cnA5MG5nbmQxa3FpZzV6OHdqbXZ3ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CjmvTCZf2U3p09Cn0h/giphy.gif" alt="Uyuyan Kedi">
+        </div>
+        <h2>İŞTE BU KADAR! 🎀</h2>
+        <p>Ufak da olsa yüzünde tatlı bir tebessüm oluşturabildiysem ne mutlu bana.</p>
+        <p style="margin-top: 15px; font-size: 1.1rem; color: var(--accent-pink);">Kendine çok dikkat et!</p>
+        
+        <div class="btn-group" style="margin-top: 20px;">
+          <button class="btn-retro btn-secondary" onclick="nextScreen(3)">← PARŞÖMENE DÖN</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const magicTexts = [
+      "\"Bazı anılar ve dostluklar zaman geçse de sihrini hiç kaybetmez...\"",
+      "\"Aramızdaki güzel yaşanmışlıklar, paylaştığımız o tatlı anlar ve birlikte güldüğümüz günler hep en özel köşede kalacak.\"",
+      "\"Hayat her birimizi farklı yollara sürüklese de, geriye dönüp baktığımda yüzümde hep tatlı bir tebessüm oluşturan güzel bir hikaye bıraktık.\"",
+      "\"Bundan sonraki hayatında karşına çıkacak tüm yeni yolların ışıkla, mutlulukla ve güzelliklerle dolmasını dilerim.\""
+    ];
+
+    let typingTimeout;
+    let isAudioPlaying = false;
+    const lightAudio = document.getElementById('bgMusicLight');
+    const darkAudio = document.getElementById('bgMusicDark');
+
+    function openEnvelope() {
+      if (!isAudioPlaying) {
+        lightAudio.play().catch(e => console.log("Ses bekleniyor"));
+        isAudioPlaying = true;
+      }
+      calculateDays();
+      nextScreen(1);
+    }
+
+    function calculateDays() {
+      const startDate = new Date('2023-09-11');
+      const today = new Date();
+      const diffTime = Math.abs(today - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      document.getElementById('dayCounter').innerHTML = `İLK KESİŞMEDEN BU YANA<br>✨ ${diffDays} GÜN GEÇTİ ✨`;
+    }
+
+    function toggleAudio() {
+      if (isAudioPlaying) {
+        lightAudio.pause();
+        darkAudio.pause();
+        isAudioPlaying = false;
+      } else {
+        if (document.body.classList.contains('dark-mode')) {
+          darkAudio.play();
+        } else {
+          lightAudio.play();
+        }
+        isAudioPlaying = true;
+      }
+    }
+
+    function switchMusicTrack(mode) {
+      if (!isAudioPlaying) return;
+
+      if (mode === 'dark') {
+        lightAudio.pause();
+        darkAudio.play().catch(e => console.log("Karanlık ses başlatılamadı"));
+      } else {
+        darkAudio.pause();
+        lightAudio.play().catch(e => console.log("Aydınlık ses başlatılamadı"));
+      }
+    }
+
+    function nextScreen(screenNumber) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      
+      if (screenNumber === 3) {
+        document.body.classList.add('dark-mode');
+        document.getElementById('screen3').classList.add('active');
+        switchMusicTrack('dark');
+        startTypingMagicText();
+      } else {
+        document.body.classList.remove('dark-mode');
+        document.getElementById('screen' + (screenNumber === 25 ? '25' : screenNumber)).classList.add('active');
+        switchMusicTrack('light');
+      }
+    }
+
+    function openNote(element) {
+      if (element.classList.contains('closed')) {
+        element.classList.remove('closed');
+        element.classList.add('open');
+      }
+    }
+
+    function startTypingMagicText() {
+      const container = document.getElementById('magicContainer');
+      const signature = document.getElementById('signature');
+      
+      container.innerHTML = ''; 
+      signature.classList.remove('visible');
+      clearTimeout(typingTimeout);
+
+      let paragraphIndex = 0;
+      let charIndex = 0;
+
+      function typeNextChar() {
+        if (paragraphIndex >= magicTexts.length) {
+          setTimeout(() => {
+            signature.classList.add('visible');
+            container.scrollTop = container.scrollHeight;
+          }, 400);
+          return;
+        }
+
+        const currentText = magicTexts[paragraphIndex];
+
+        let pElement = document.getElementById(`p-${paragraphIndex}`);
+        if (!pElement) {
+          pElement = document.createElement('div');
+          pElement.id = `p-${paragraphIndex}`;
+          pElement.className = 'magic-paragraph';
+          container.appendChild(pElement);
+        }
+
+        pElement.textContent = currentText.substring(0, charIndex + 1);
+        container.scrollTop = container.scrollHeight;
+
+        charIndex++;
+
+        if (charIndex < currentText.length) {
+          typingTimeout = setTimeout(typeNextChar, 45);
+        } else {
+          paragraphIndex++;
+          charIndex = 0;
+          typingTimeout = setTimeout(typeNextChar, 500);
+        }
+      }
+
+      typingTimeout = setTimeout(typeNextChar, 300);
+    }
+  </script>
+</body>
+</html>
